@@ -1,0 +1,94 @@
+version: "3.3"
+services:
+
+      
+
+  # mysql:
+  #   container_name: mysql
+  #   image: mariadb:latest
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: MyDBRoot123
+  #     MYSQL_DATABASE: cloud_computing
+  #     MYSQL_USER: php
+  #     MYSQL_PASSWORD: php
+  #   networks:
+  #     - mynet
+
+  # myredis:
+  #   container_name: myredis 
+  #   image: redis:latest
+  #   networks: 
+  #     - mynet
+
+  mymongo: 
+    image: mongo 
+    container_name: 'mymongo' 
+    ports:
+     - "27017:27017"
+
+  mongo_admin: 
+    image: mongo-express 
+    container_name: 'mongoadmin' 
+    depends_on: 
+     - mymongo 
+    links: 
+     - mongo 
+    ports: 
+     - "8081:8081"
+    networks: 
+      - mynet
+  
+  mycomposer:
+    image: composer/composer
+    container_name: 'mycontainer'
+    
+    networks: 
+      - mynet
+
+
+  myphp:
+    container_name: myphp 
+    depends_on: 
+      # - mysql
+      # - myredis
+      - mymongo
+    build:
+      context: ./src/php
+      dockerfile: dockerfile
+    privileged: True
+    expose: 
+      - 9000
+    volumes: 
+      - "./src:/var/www/html"
+    networks: 
+      - mynet
+
+  mynginx:
+    container_name: mynginx
+    depends_on: 
+      - myphp
+      - mymongo
+    image: nginx:latest
+    ports: 
+      - "8080:80"
+    privileged: True
+    volumes:
+      - "./src:/var/www/html"
+      - "./src/nginx.ini:/etc/nginx/conf.d/default.conf"
+    networks: 
+      - mynet
+
+  # phpMyAdmin:
+  #   container_name: phpMyAdmin
+  #   image: phpmyadmin:latest
+  #   environment:
+  #     PMA_HOST: mysql
+  #   ports: 
+  #     - "8082:80"
+  #   privileged: True
+  #   networks: 
+  #     - mynet
+
+networks: 
+  mynet: 
+    driver: bridge

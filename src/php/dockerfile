@@ -1,0 +1,17 @@
+# FROM php:7.4-fpm
+
+# RUN pecl install igbinary \
+# 	&& pecl install redis \
+# 	&& docker-php-ext-install mysqli \
+# 	&& docker-php-ext-enable redis \
+# 	&& echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini
+
+
+
+
+# https://docs.bitnami.com/tutorials/create-custom-php-fpm-container-mongodb-support/
+
+FROM php:7.4-fpm
+
+RUN pecl install mongodb
+RUN echo "extension=mongodb.so" >> /opt/bitnami/php/etc/php.ini
