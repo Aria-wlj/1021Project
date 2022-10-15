@@ -32,7 +32,7 @@ services:
     depends_on: 
      - mymongo 
     links: 
-     - mongo 
+     - mymongo 
     ports: 
      - "8081:8081"
     networks: 
