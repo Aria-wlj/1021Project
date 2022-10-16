@@ -2,61 +2,54 @@ version: "3.3"
 services:
 
       
-
-  # mysql:
-  #   container_name: mysql
-  #   image: mariadb:latest
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: MyDBRoot123
-  #     MYSQL_DATABASE: cloud_computing
-  #     MYSQL_USER: php
-  #     MYSQL_PASSWORD: php
-  #   networks:
-  #     - mynet
-
-  # myredis:
-  #   container_name: myredis 
-  #   image: redis:latest
-  #   networks: 
-  #     - mynet
-
-  mymongo: 
-    image: mongo 
-    container_name: 'mymongo' 
+  mymongo:
+    image: mongo:latest
+    container_name: 'mymongo'
     ports:
      - "27017:27017"
+    privileged: True
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - '/data/configdb:/data/configdb'
+      - '/data/db:/data/db'
+    networks:
+      - mynet
 
-  mongo_admin: 
-    image: mongo-express 
-    container_name: 'mongoadmin' 
-    depends_on: 
-     - mymongo 
-    links: 
-     - mymongo 
-    ports: 
+  mongo_admin:
+    image: mongo-express
+    container_name: 'mongoadmin'
+    depends_on:
+     - mymongo
+    links:
+     - mymongo
+    ports:
      - "8081:8081"
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: root
-      # - ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
-      ME_CONFIG_MONGODB_URL: mongodb://localhost:27017
-    networks: 
+      ME_CONFIG_MONGODB_URL: mongodb://root:root@mongo:27017/?authSource=admin
+      # ME_CONFIG_MONGODB_URL: mongodb://localhost:27017
+      ME_CONFIG_MONGODB_SERVER: mymongo
+      # - ME_CONFIG_BASICAUTH_USERNAME=mexpress
+      # - ME_CONFIG_BASICAUTH_PASSWORD=mexpress
+    networks:
       - mynet
+    volumes:
+      - ./data:/data/db
   
-  mycomposer:
-    image: composer/composer
-    container_name: 'mycontainer'
+  # mycomposer:
+  #   image: composer/composer
+  #   container_name: 'mycontainer'
     
-    networks: 
-      - mynet
+  #   networks: 
+  #     - mynet
 
 
   myphp:
-    container_name: myphp 
-    depends_on: 
+    container_name: myphp
+    depends_on:
       # - mysql
       # - myredis
       - mymongo
@@ -64,26 +57,26 @@ services:
       context: ./src/php
       dockerfile: dockerfile
     privileged: True
-    expose: 
+    expose:
       - 9000
-    volumes: 
+    volumes:
       - "./src:/var/www/html"
-    networks: 
+    networks:
       - mynet
 
   mynginx:
     container_name: mynginx
-    depends_on: 
+    depends_on:
       - myphp
       - mymongo
     image: nginx:latest
-    ports: 
+    ports:
       - "8080:80"
     privileged: True
     volumes:
       - "./src:/var/www/html"
       - "./src/nginx.ini:/etc/nginx/conf.d/default.conf"
-    networks: 
+    networks:
       - mynet
 
   # phpMyAdmin:
